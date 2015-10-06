@@ -28,8 +28,8 @@ class WordBrainTest < MiniTest::Test
     #[ l m ]
     @board = [%w(c a), %w(l m)]
     @game.print_board @board
-    words_4 = @game.play([], @board, [4])
-    words_2 = @game.play([], @board, [2])
+    words_4 = @game.start(@board, [4])
+    words_2 = @game.start(@board, [2])
     # @game.print_word_list
     assert_equal ["calm", "clam"], words_4
     assert_equal ["am", "al", "la", "ma"], words_2
@@ -82,9 +82,11 @@ class WordBrainTest < MiniTest::Test
 
   def test_multi_round
     @board = [%w(o o t), %w(d a r), %w(d r c)]
-    words = @game.play([], @board, [3, 6])
+    words = @game.start(@board, [3, 6])
     @board = [%w(l k s), %w(a o c), %w(t e p)]
-    words = @game.play([], @board, [5, 4])
+    words = @game.start(@board, [5, 4])
+    @board = [%w(h s s ), %w(i s o), %w(f k c)]
+    words = @game.start(@board, [4, 5])
     p words
   end
 

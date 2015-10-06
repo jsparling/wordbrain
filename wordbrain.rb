@@ -11,17 +11,30 @@ class WordBrain
     Array.new(num_rows) { |i| Array.new(num_cols){ false }}
   end
 
+  def start(board, target_lengths)
+    found_word_list = play([], board, target_lengths)
+
+    create_keeper_list(found_word_list, target_lengths.length)
+  end
+
+  def create_keeper_list(found_word_list, number_of_words)
+    keeper_list = []
+    found_word_list.each do |word_array|
+      keeper_list << word_array if word_array.length == number_of_words
+    end
+    keeper_list.uniq
+  end
+
   def play(found_word_list, board, target_lengths)
-    # @found_word_list ||= Array.new(target_lengths.length) { |i| [] }
     found_word_list ||= []
     @calls = 0
     board.each_with_index do |row, row_index|
-      row.each_with_index do |col, col_index|
+      row.each_with_index do |_, col_index|
         visited = fill_blank_array(board)
         find_words(found_word_list, board, visited, row_index ,col_index, "", target_lengths[0], target_lengths)
       end
     end
-    p @calls
+    # p @calls
     found_word_list
   end
 
@@ -47,7 +60,6 @@ class WordBrain
           if words.length > 0
             found_word_list << [current_word, words]
           end
-
         end
       end
     else
@@ -62,20 +74,10 @@ class WordBrain
     end
   end
 
-  def word_list
-    words = {}
-    File.open("./en.txt") do |file|
-      file.each do |line|
-        words[line.strip] = true
-      end
-    end
-    words
-  end
-
   def reduce_board(board, visited)
     return_board = board.map(&:dup)
     return_board.each_with_index do |row, row_index|
-      row.each_with_index do |col, col_index|
+      row.each_with_index do |_, col_index|
         if visited[row_index][col_index]
           return_board[row_index][col_index] = nil
         end
@@ -97,6 +99,33 @@ class WordBrain
     return_board
   end
 
+  # this works, but is kind of complicated to follow
+  def reduce_and_shift(board, visited)
+    return_board = board.map(&:dup)
+
+    (return_board[0].length - 1).downto(0) do |col|
+      (return_board.length - 1).downto(0) do |row|
+        if visited[row][col]
+          if row > 0
+            if visited[row-1][col]
+              return_board[row][col] = nil
+            else
+              return_board[row][col] = return_board[row-1][col]
+            end
+
+            visited[row][col] = visited[row-1][col]
+            visited[row-1][col] = false
+            return_board[row-1][col] = nil
+          else
+            return_board[row][col] = nil
+          end
+        end
+      end
+    end
+
+    return_board
+  end
+
   # This is not necessary, the regular method to get words is very fast
   def create_word_lists(words)
     numbered_word_list = Array.new(29) { |i| {} }
@@ -113,4 +142,13 @@ class WordBrain
     end
   end
 
+  def word_list
+    words = {}
+    File.open("./en.txt") do |file|
+      file.each do |line|
+        words[line.strip] = true
+      end
+    end
+    words
+  end
 end
