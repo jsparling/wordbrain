@@ -99,33 +99,6 @@ class WordBrain
     return_board
   end
 
-  # this works, but is kind of complicated to follow
-  def reduce_and_shift(board, visited)
-    return_board = board.map(&:dup)
-
-    (return_board[0].length - 1).downto(0) do |col|
-      (return_board.length - 1).downto(0) do |row|
-        if visited[row][col]
-          if row > 0
-            if visited[row-1][col]
-              return_board[row][col] = nil
-            else
-              return_board[row][col] = return_board[row-1][col]
-            end
-
-            visited[row][col] = visited[row-1][col]
-            visited[row-1][col] = false
-            return_board[row-1][col] = nil
-          else
-            return_board[row][col] = nil
-          end
-        end
-      end
-    end
-
-    return_board
-  end
-
   # This is not necessary, the regular method to get words is very fast
   def create_word_lists(words)
     numbered_word_list = Array.new(29) { |i| {} }
