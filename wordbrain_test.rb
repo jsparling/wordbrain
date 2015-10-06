@@ -35,6 +35,13 @@ class WordBrainTest < MiniTest::Test
     assert_equal ["am", "al", "la", "ma"], words_2
   end
 
+  def test_play_2x2
+    @board = [%w(a m), %w(l a)]
+    words = @game.start(@board, [2, 2])
+    p words
+    assert words.include?(["am", ["la"]])
+  end
+
   def test_play_6
     #[ c a ]
     #[ l m ]
@@ -81,13 +88,30 @@ class WordBrainTest < MiniTest::Test
   end
 
   def test_multi_round
-    @board = [%w(o o t), %w(d a r), %w(d r c)]
-    words = @game.start(@board, [3, 6])
-    @board = [%w(l k s), %w(a o c), %w(t e p)]
-    words = @game.start(@board, [5, 4])
-    @board = [%w(h s s ), %w(i s o), %w(f k c)]
-    words = @game.start(@board, [4, 5])
-    p words
+    board = [%w(o o t), %w(d a r), %w(d r c)]
+    words = @game.start(board, [3, 6])
+    expected_words = [["odd", ["carrot"]]]
+    assert_equal expected_words, words
+
+    board = [%w(l k s), %w(a o c), %w(t e p)]
+    words = @game.start(board, [5, 4])
+    expected_words = [["locks", ["peat"]], ["sceat", ["polk"]], ["scope", ["talk"]], ["talks", ["cope"]], ["tocks", ["pela", "peal"]], ["polka", ["tecs"]], ["pokal", ["tecs"]], ["pocks", ["late", "teal"]], ["peaks", ["colt"]], ["petal", ["sock"]]]
+    assert_equal expected_words, words
+
+    board = [%w(h s s ), %w(i s o), %w(f k c)]
+    words = @game.start(board, [4, 5])
+    expected_words = [["fish", ["socks"]], ["fisc", ["skosh"]], ["cosh", ["fisks"]]]
+    assert_equal expected_words, words
+
+    board = [%w(f y e), %w(s l l), %w(i c k)]
+    words = @game.start(board, [3, 6])
+    expected_words = ["fly", ["sickle"]]
+    assert words.include?(expected_words)
+
+    board = [%w(d n c), %w(t a a), %w(l e e)]
+    words = @game.start(board, [3, 6])
+    expected_words = ["eat", ["candle"]]
+    assert words.include?(expected_words)
   end
 
 

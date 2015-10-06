@@ -1,4 +1,4 @@
-class WordBrain
+class WordBrainOld
   attr_reader :words
 
   def initialize
