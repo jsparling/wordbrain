@@ -84,15 +84,22 @@ class WordBrainTest < MiniTest::Test
     visited = [[false, false, false], [true, true, false], [true, false, true]]
     board = [%w(h s s ), %w(i s o), %w(f k c)]
     expected = [[nil, nil, nil], [nil, "s", "s"], ["h", "k", "o"]]
-    temp_board = @game.reduce_board(board, visited)
-    @game.shift_board_down(temp_board)
     actual = @game.reduce_and_shift_board(board, visited)
     assert_equal expected, actual
   end
 
   def test_simple_shift
-    board = [["a"], [nil], [nil]]
     expected = [[nil], [nil], ["a"]]
+
+    board = [["a"], [nil], [nil]]
+    actual = @game.shift_board_down(board)
+    assert_equal expected, actual
+
+    board = [[nil], ["a"], [nil]]
+    actual = @game.shift_board_down(board)
+    assert_equal expected, actual
+
+    board = [[nil], [nil], ["a"]]
     actual = @game.shift_board_down(board)
     assert_equal expected, actual
   end
@@ -147,7 +154,7 @@ class WordBrainTest < MiniTest::Test
   def test_3x3_3_words
     @game.words = { "sienh" => true, "shine" => true, "ma" => true, "xy" => true}
     board = %w(s i e h n m y x a)
-    words = @game.play(board, [5, 2, 2])
+    @game.play(board, [5, 2, 2])
   end
 
   def test_4x4_1
