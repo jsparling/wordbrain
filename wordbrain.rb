@@ -1,73 +1,98 @@
 class WordBrain
-  attr_reader :words
+  include Math
+  attr_accessor :words
 
   def initialize
     @words = word_list
   end
 
-  def start(board, target_lengths)
-    @num_cols = board[0].length
-    @num_rows = board.length
-    found_word_list = play([], board, target_lengths)
+  def convert_string_to_board(string_array)
+    length = sqrt(string_array.length).to_i
 
-    create_keeper_list(found_word_list, target_lengths.length)
-  end
-
-  def create_keeper_list(found_word_list, number_of_words)
-    keeper_list = []
-    found_word_list.each do |word_array|
-      keeper_list << word_array if word_array.length == number_of_words
+    board = []
+    length.times do |index|
+      row = []
+      length.times do ||
+        row << string_array.shift
+      end
+      board[index] = row
     end
-    keeper_list.uniq
+    board
   end
 
-  def play(found_word_list, board, target_lengths)
-    found_word_list ||= []
+  def play(board, target_lengths)
+    if board[0].length == 1
+      board = convert_string_to_board(board)
+    end
 
-    @calls = 0
+    master_list = []
+    play_recursive(master_list, [], board, target_lengths, 0)
+    master_list.uniq
+  end
+
+  def play_recursive(master_list, current_word_list, board, target_lengths, level)
+    if (target_lengths.length) == level
+      master_list << current_word_list
+      return
+    end
+
+    new_found_words = play_single_word(board, target_lengths[level])
+
+    return if new_found_words.empty?
+
+    new_found_words.each_with_index do |found|
+      temp_word_list = current_word_list.map(&:dup)
+      current_word_list << found[0]
+      new_visited = found[1]
+      temp_board = reduce_and_shift_board(board, new_visited)
+      play_recursive(master_list, current_word_list, temp_board, target_lengths, level+1)
+      current_word_list = temp_word_list
+    end
+  end
+
+  def play_single_word(board, target_length)
+    visited = fill_blank_array(board)
+    found_words = []
     board.each_with_index do |row, row_index|
       row.each_with_index do |_, col_index|
-        visited = fill_blank_array(board)
-        find_words(found_word_list, board, visited, row_index ,col_index, "", target_lengths[0], target_lengths)
+        find_words(found_words, board, visited.map(&:dup), row_index, col_index, "", target_length)
       end
     end
-    # p @calls
-    found_word_list
+    found_words.uniq
   end
 
-  def find_words(found_word_list, board, visited, row, col, current_word, current_word_length, target_lengths)
-    @calls += 1
-    return if row < 0 || row >= @num_rows
-    return if col < 0 || col >= @num_cols
-    return if visited[row][col]
-    return if board[row][col].nil?
+  def find_words(found_words, board, visited, row, col, current_word, target_length)
+    return found_words if find_words_base_case?(board, visited, row, col)
 
     current_word = "#{current_word}#{board[row][col]}"
     visited[row][col] = true
 
-    if current_word.length == current_word_length
+    if current_word.length == target_length
       if @words[current_word]
-        found_word_list << current_word
-
-        if target_lengths.length > 1
-          reduced_board = reduce_board(board, visited)
-          shifted_board = shift_board_down(reduced_board)
-          words = play([], shifted_board, target_lengths.drop(1))
-          if words.length > 0
-            found_word_list << [current_word, words]
-          end
-        end
+        found_words << [current_word, visited]
       end
     else
-      find_words(found_word_list, board, visited.map(&:dup), row-1, col-1, current_word, current_word_length, target_lengths) # up-left
-      find_words(found_word_list, board, visited.map(&:dup), row-1, col,   current_word, current_word_length, target_lengths) # up
-      find_words(found_word_list, board, visited.map(&:dup), row-1, col+1, current_word, current_word_length, target_lengths) # up-right
-      find_words(found_word_list, board, visited.map(&:dup), row,   col+1, current_word, current_word_length, target_lengths) # right
-      find_words(found_word_list, board, visited.map(&:dup), row+1, col+1, current_word, current_word_length, target_lengths) # right-down
-      find_words(found_word_list, board, visited.map(&:dup), row+1, col,   current_word, current_word_length, target_lengths) # down
-      find_words(found_word_list, board, visited.map(&:dup), row+1, col-1, current_word, current_word_length, target_lengths) # left-down
-      find_words(found_word_list, board, visited.map(&:dup), row,   col-1, current_word, current_word_length, target_lengths) # left
+      find_words(found_words, board, visited.map(&:dup), row-1, col-1, current_word, target_length) # up-left
+      find_words(found_words, board, visited.map(&:dup), row-1, col,   current_word, target_length) # up
+      find_words(found_words, board, visited.map(&:dup), row-1, col+1, current_word, target_length) # up-right
+      find_words(found_words, board, visited.map(&:dup), row,   col+1, current_word, target_length) # right
+      find_words(found_words, board, visited.map(&:dup), row+1, col+1, current_word, target_length) # right-down
+      find_words(found_words, board, visited.map(&:dup), row+1, col,   current_word, target_length) # down
+      find_words(found_words, board, visited.map(&:dup), row+1, col-1, current_word, target_length) # left-down
+      find_words(found_words, board, visited.map(&:dup), row,   col-1, current_word, target_length) # left
     end
+  end
+
+  def find_words_base_case?(board, visited, row, col)
+    return true if row < 0 || row >=board.length
+    return true if col < 0 || col >= board[0].length
+    return true if visited[row][col]
+    return true if board[row][col].nil?
+    false
+  end
+
+  def reduce_and_shift_board(board, visited)
+    shift_board_down(reduce_board(board, visited))
   end
 
   def reduce_board(board, visited)
@@ -85,26 +110,27 @@ class WordBrain
   def shift_board_down(board)
     return_board = board.map(&:dup)
     (return_board[0].length - 1).downto(0) do |col|
-      (return_board.length - 1).downto(0) do |row|
-        if return_board[row][col].nil? && row > 0
-          return_board[row][col] = return_board[row-1][col]
-          return_board[row-1][col] = nil
-        end
-      end
+      shift_column_down(return_board, col)
     end
     return_board
   end
 
-  def print_board(board)
-    board.each do |row|
-      p row
+  def shift_column_down(return_board, col)
+    column = []
+    (return_board.length - 1).downto(0) do |row|
+      column << return_board[row][col]
+    end
+
+    new_column = column.compact
+    (return_board.length - 1).downto(0) do |row|
+      return_board[row][col] = new_column.shift
     end
   end
 
   def fill_blank_array(board)
     num_rows = board.length
     num_cols = board[0].length
-    Array.new(num_rows) { |i| Array.new(num_cols){ false }}
+    Array.new(num_rows) { Array.new(num_cols){ false }}
   end
 
   def word_list
